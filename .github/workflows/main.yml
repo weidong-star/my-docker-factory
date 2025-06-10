@@ -1,5 +1,5 @@
-# 修正后的 GitHub Actions 工作流文件
-name: Build Docker Offline Package for CentOS 7 (Fixed)
+# 最终版：修复所有兼容性问题
+name: Build Docker Offline Package for CentOS 7 (Final)
 
 on:
   workflow_dispatch:
@@ -10,25 +10,17 @@ jobs:
     container: centos:7
 
     steps:
-      # 第1步：修正 CentOS 基础源，然后准备环境
+      # 第1步：修正源并准备环境 (此步骤不变，已经验证是正确的)
       - name: 修正源并准备环境
         run: |
-          # 这是最关键的新增步骤：在进行任何 yum 操作之前，先将 CentOS 的源指向 vault 档案馆
           sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/CentOS-Base.repo
           sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Base.repo
-
-          # 现在可以安全地执行 yum 操作了
-          echo "--- 开始安装依赖工具 ---"
-          yum install -y epel-release yum-utils
-
-          echo "--- 添加 Docker 官方源 ---"
+          yum install -y epel-release yum-utils curl # 新增安装 curl
           yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-
-          echo "--- 清理并创建缓存 ---"
           yum clean all
           yum makecache
 
-      # 第2步：下载所有依赖包 (此步骤无变化)
+      # 第2步：下载所有依赖包 (此步骤不变)
       - name: 下载Docker及其所有依赖
         run: |
           mkdir docker-packages
@@ -39,15 +31,17 @@ jobs:
             docker-buildx-plugin \
             docker-compose-plugin
       
-      # 第3步：打包所有RPM文件 (此步骤无变化)
+      # 第3步：打包所有RPM文件 (此步骤不变)
       - name: 打包所有RPM文件
         run: |
           cd docker-packages
           tar -czvf ../DOCKER_CENTOS7_OFFLINE_PACK.tar.gz .
 
-      # 第4步：上传构建产物 (此步骤无变化)
-      - name: 上传打包好的文件作为产物
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-centos7-package
-          path: DOCKER_CENTOS7_OFFLINE_PACK.tar.gz
+      # 第4步：【全新方法】上传到中转站并打印下载链接
+      - name: 上传到临时中转站
+        run: |
+          echo "--- 开始上传文件，请在日志中查找最终的下载链接 ---"
+          # 使用 curl 将文件上传到 transfer.sh，它会返回一个下载链接
+          curl --upload-file ./DOCKER_CENTOS7_OFFLINE_PACK.tar.gz https://transfer.sh/DOCKER_CENTOS7_OFFLINE_PACK.tar.gz
+          echo "" # 打印一个空行方便查看
+          echo "--- 上传完成，请复制上面的链接进行下载！链接14天内有效。 ---"
