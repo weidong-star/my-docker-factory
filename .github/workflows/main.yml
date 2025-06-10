@@ -1,40 +1,37 @@
-# 工作流名称，方便你识别
-name: Build Docker Offline Package for CentOS 7
+# 修正后的 GitHub Actions 工作流文件
+name: Build Docker Offline Package for CentOS 7 (Fixed)
 
-# 触发条件：允许我们手动点击按钮来运行
 on:
   workflow_dispatch:
 
-# 定义具体的工作任务
 jobs:
   build-package:
-    # 指定“工厂”的环境：在一个临时的、最新版的Ubuntu服务器上
     runs-on: ubuntu-latest
-    # 在这个Ubuntu服务器里，再启动一个我们需要的CentOS 7容器作为“工作台”
-    # 这样做可以确保所有下载的包都与你的服务器环境100%兼容
     container: centos:7
 
-    # 定义生产步骤
     steps:
-      # 第1步：安装工具并添加所有必需的软件仓库源
-      - name: 准备环境和软件源
+      # 第1步：修正 CentOS 基础源，然后准备环境
+      - name: 修正源并准备环境
         run: |
-          # 安装epel-release，这是提供fuse3-libs等包的关键源
+          # 这是最关键的新增步骤：在进行任何 yum 操作之前，先将 CentOS 的源指向 vault 档案馆
+          sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/CentOS-Base.repo
+          sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Base.repo
+
+          # 现在可以安全地执行 yum 操作了
+          echo "--- 开始安装依赖工具 ---"
           yum install -y epel-release yum-utils
-          # 添加Docker官方的软件源
+
+          echo "--- 添加 Docker 官方源 ---"
           yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-          # 清理缓存，确保使用的是最新的软件列表
+
+          echo "--- 清理并创建缓存 ---"
           yum clean all
           yum makecache
 
-      # 第2步：自动计算并下载所有依赖包
+      # 第2步：下载所有依赖包 (此步骤无变化)
       - name: 下载Docker及其所有依赖
         run: |
-          # 创建一个目录来存放下载的RPM包
           mkdir docker-packages
-          # 使用yumdownloader工具，--resolve参数会自动下载所有依赖项
-          # 我们告诉它我们最终想要docker-ce和它的插件
-          # 它就会自动把docker-ce, containerd.io, fuse3-libs, container-selinux等等所有需要的东西全部下载下来
           yumdownloader --resolve --destdir=./docker-packages \
             docker-ce \
             docker-ce-cli \
@@ -42,13 +39,13 @@ jobs:
             docker-buildx-plugin \
             docker-compose-plugin
       
-      # 第3步：将所有下载好的RPM包打包
+      # 第3步：打包所有RPM文件 (此步骤无变化)
       - name: 打包所有RPM文件
         run: |
           cd docker-packages
           tar -czvf ../DOCKER_CENTOS7_OFFLINE_PACK.tar.gz .
 
-      # 第4步：将最终的成品打包文件上传，方便我们下载
+      # 第4步：上传构建产物 (此步骤无变化)
       - name: 上传打包好的文件作为产物
         uses: actions/upload-artifact@v4
         with:
