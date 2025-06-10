@@ -1,159 +1,67 @@
-# =================================================================================，点击它。
-4.  在打开的文件预览页面，点击右上角的**铅笔图标 (Edit this file)**===
-# GitHub Actions 工作流文件 (最终、完整、修正版)
-#
-# 功能: 
-#   ，进入在线编辑模式。
- 
-#### 第二步：替换所有代码
+# ===================================================================================
+# GitHub Actions 工作流文件 (V3 - 修正了致命的YAML语法错误)
+# ===================================================================================
 
-1.  **关键操作**：在为 CentOS 7 系统自动构建一个包含所有依赖的、完整的 Docker 离线安装包。
-#
-# 使用方法:
-#   1. 将此文件内容完整复制到你 GitHub 仓库的 .github/workflows/编辑器中，使用鼠标或快捷键 (`Ctrl+A`) **选中里面所有的旧代码，然后按 `Delete` download.yml 中。
-#   2. 在 Actions 页面手动触发此工作流。
-#   3.键全部删除**。确保编辑器是完全空白的。
-2.  **完整复制下面的代码**：请 工作流成功运行后（绿色对勾），在运行详情页的 "Artifacts" 区域下载成品。
-# =从 `name: Build Docker...` 这一行开始，一直到最后一行 `path: ...`，不多===================================================================================
+# 工作流名称
+name: Build Docker Offline Package for CentOS 7 (V3 - Syntax Fixed)
 
-# 工作流名称，方便你在 GitHub Actions 页面识别
-name: Build Docker Offline Package for不少，完整地复制下面代码框中的所有内容。
-
-    ```yaml
-    # 这是最终、完整、可以直接 CentOS 7 (Ultimate Fix)
-
-# 工作流的触发条件：允许我们手动点击 "Run workflow" 使用的 GitHub Actions 工作流文件
-    # 它将为您构建一个包含所有依赖的 Docker for CentOS 7 按钮来启动
+# 工作流的触发条件
+# 修正之处： "on:" 后面需要换行和缩进
 on:
   workflow_dispatch:
 
-# 定义工作流中包含的所有任务 (我们这里离线安装包
-    
-    name: Build Docker Offline Package for CentOS 7 (Ultimate Final Version)
-只有一个任务)
+# 定义工作任务
 jobs:
-  # 任务的唯一ID，可以自定义
   build-package:
-
-    
-    # 允许我们通过点击 GitHub 网站上的按钮来手动触发这个工作流
-    on:
-      workflow_dispatch:
-    
-    # 定义所有需要执行的工作任务
-    jobs:
-      # 我们    # 步骤 1: 指定运行此任务的“服务器”环境
-    # 我们选择 'ubuntu-latest'，因为它功能强大、网络稳定、工具兼容性好
+    # 指定运行环境
     runs-on: ubuntu-latest
 
-    # 只定义一个任务，取名为 build-package
-      build-package:
-    
-        # 步骤 1:步骤 2: 定义此任务要执行的一系列操作
+    # 定义操作步骤
     steps:
-      # 操作一：安装构建 指定运行环境
-        # 我们不再使用有网络和兼容性问题的 centos:7 容器作为主环境
-        # 而是使用 GitHub Actions 官方推荐的、功能强大的 ubuntu-latest 环境
-        runs-on: ubuntu-latest工具
-      # 我们需要 podman (一个类似Docker的工具，用来运行CentOS 7容器) 和
-    
-        # 步骤 2: 定义具体的操作步骤
-        steps:
-          # 第一个操作 yum-utils
+      # 操作一：安装构建工具
       - name: 安装构建工具 (podman and yum-utils)
         run: |
           sudo apt-get update
           sudo apt-get install -y podman yum-utils
 
-      # 操作二：在一个：安装我们需要的工具
-          # podman 是一个类似 docker 的容器工具，我们将用它来临时启动一个 centos:7 容器
-          - name: Install build tools (podman)
-            run: |
-              sudo apt临时的 CentOS 7 容器内，完成所有依赖的下载和打包工作
-      # 这是整个流程的核心，-get update
-              sudo apt-get install -y podman yum-utils
-    
-          # 第二个操作：在这个它保证了所有文件都是为 CentOS 7 准备的
+      # 操作二：在临时的 CentOS 7 容器内下载并打包
       - name: 在 CentOS 7 容器内下载并打包所有依赖
         run: |
-          # 在当前 Ubuntu 环境中创建一个目录，用来存放从容器里拿强大的 Ubuntu 环境中，启动一个临时的、一次性的 centos:7 容器来完成下载任务
-          - name出来的最终成品
           mkdir -p final-package
-
-          # 运行一个一次性的、用完即弃: Prepare and download all dependencies inside a CentOS 7 container
-            run: |
-              # 在主环境(的 CentOS 7 容器 (--rm)
-          # 我们把外部的 final-package 目录，挂载到容器Ubuntu)中创建一个目录，用来存放从容器里拿出来的最终成品
-              mkdir -p final-package
-    内部的 /output 目录 (-v)
-          # 这样，容器在 /output 目录里生成的文件
-              # 使用 podman 运行一个 centos:7 容器，并在其中执行一长串命令
-              # --，就会自动出现在外部的 final-package 目录中
           podman run --rm \
             -v ./final-package:/output \
             docker.io/library/centos:7 \
-            /bin/bash -rm: 表示容器运行结束后自动删除，不留垃圾
-              # -v ./final-package:/output: 表示c " \
-              echo '--- Step A: 修正 yum 源，指向 vault 档案馆 ---'; \
-将主环境的 final-package 目录映射到容器的 /output 目录，这是交换文件的关键
-              #              sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/CentOS docker.io/library/centos:7: 指定要使用的容器镜像
-              # /bin/bash -c "..."-Base.repo && \
-              sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS : 表示在容器内执行这一串 Shell 命令
-              podman run --rm \
-                -v ./final-package:/-Base.repo && \
+            /bin/bash -c " \
+              echo '--- Step A: 修正 yum 源 ---'; \
+              sed -i 's/mirrorlist/#mirrorlist/' /etc/yum.repos.d/CentOS-Base.repo && \
+              sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Base.repo && \
               \
-              echo '--- Step B: 安装 EPEL 源和 Docker 源output \
-                docker.io/library/centos:7 \
-                /bin/bash -c " \
-                   ---'; \
+              echo '--- Step B: 安装和添加软件源 ---'; \
               yum install -y epel-release yum-utils && \
-              yum-config-echo '--- [Inside Container] Fixing CentOS repositories ---'; \
-                  sed -i 's/mirrorlist/#manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \mirrorlist/' /etc/yum.repos.d/CentOS-Base.repo && \
-                  sed -i 's
+              yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
               \
               echo '--- Step C: 清理并创建缓存 ---'; \
-              yum clean all &&|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org| \
+              yum clean all && \
               yum makecache && \
               \
-              echo '--- Step D: 自动下载 Docker g' /etc/yum.repos.d/CentOS-Base.repo && \
-                  echo '---及其所有依赖 ---'; \
+              echo '--- Step D: 自动下载所有依赖 ---'; \
               mkdir /rpm-packages && \
-              yumdownloader --resolve --destdir=/rpm [Inside Container] Installing tools and adding repositories ---'; \
-                  yum install -y epel-release yum-utils-packages \
+              yumdownloader --resolve --destdir=/rpm-packages \
                 docker-ce \
                 docker-ce-cli \
-                containerd.io \ && \
-                  yum-config-manager --add-repo https://download.docker.com/linux/centos
+                containerd.io \
                 docker-buildx-plugin \
                 docker-compose-plugin && \
               \
-              echo/docker-ce.repo && \
-                  echo '--- [Inside Container] Creating cache ---'; \
-                   '--- Step E: 将所有下载的 .rpm 文件打包成 .tar.gz ---'; \
-              taryum clean all && \
-                  yum makecache && \
-                  echo '--- [Inside Container] Downloading Docker and -czvf /output/DOCKER_CENTOS7_OFFLINE_PACK.tar.gz -C all dependencies ---'; \
-                  mkdir /rpm-packages && \
-                  yumdownloader --resolve --destdir=/rpm /rpm-packages . \
+              echo '--- Step E: 打包所有 .rpm 文件 ---'; \
+              tar -czvf /output/DOCKER_CENTOS7_OFFLINE_PACK.tar.gz -C /rpm-packages . \
             "
       
-      # 操作三：将最终的成品文件上传，-packages \
-                    docker-ce \
-                    docker-ce-cli \
-                    containerd.io \以便我们下载
-      # 我们使用与 Ubuntu 环境绝对兼容的官方工具 actions/upload-artifact@v4
-
-                    docker-buildx-plugin \
-                    docker-compose-plugin && \
-                  echo '--- [Inside Container] Packaging all downloaded RPMs ---'; \
-                  tar -czvf /output/DOCKER_CENTOS7      - name: 上传最终的离线包 (Upload a Build Artifact)
-        uses: actions/upload-artifact@_OFFLINE_PACK.tar.gz -C /rpm-packages . && \
-                  echo '--- [v4
+      # 操作三：上传最终的成品文件
+      - name: 上传最终的离线包
+        uses: actions/upload-artifact@v4
         with:
-          # 上传后在网页上显示的文件名
-          name: docker-centos7Inside Container] All tasks finished successfully. ---'; \
-                "
-          
-          # 第三个操作：上传-package
+          # 上传后的文件名
+          name: docker-centos7-package
           # 要上传的文件的路径
           path: ./final-package/DOCKER_CENTOS7_OFFLINE_PACK.tar.gz
